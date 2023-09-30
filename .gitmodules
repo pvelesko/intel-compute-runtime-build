@@ -1,0 +1,26 @@
+[submodule "llvm-project"]
+	path = llvm-project
+	url = https://github.com/llvm/llvm-project
+	branch = release/14.x
+[submodule "vc-intrinsics"]
+	path = vc-intrinsics
+	url = https://github.com/intel/vc-intrinsics
+[submodule "opencl-clang"]
+	path = opencl-clang
+	url = https://github.com/intel/opencl-clang
+	branch = ocl-open-140
+[submodule "SPIRV-Tools"]
+	path = SPIRV-Tools
+	url = https://github.com/KhronosGroup/SPIRV-Tools.git
+[submodule "SPIRV-Headers"]
+	path = SPIRV-Headers
+	url = https://github.com/KhronosGroup/SPIRV-Headers.git
+[submodule "igc"]
+	path = igc
+	url = https://github.com/intel/intel-graphics-compiler
+[submodule "gmmlib"]
+	path = gmmlib
+	url = https://github.com/intel/gmmlib
+[submodule "igsc"]
+	path = igsc
+	url = https://github.com/intel/igsc
