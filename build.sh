@@ -23,6 +23,6 @@ cmake -S igc -B igc/build -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/igc/$DATE
 cmake --build igc/build --config Release -j $(nproc)
 cmake --build igc/build --target install
 
-cmake -S neo -B neo/build -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/neo/$DATE -DGMM_DIR=/opt/install/intel/gmmlib
+cmake -S neo -B neo/build -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/neo/$DATE -DGMM_DIR=/opt/install/intel/gmmlib -DCMAKE_PREFIX_PATH=${INSTALL_DIR} -DSKIP_UNIT_TESTS=ON -OCL_ICD_VENDORDIR= -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/opencl-icd
 cmake --build neo/build --config Release -j $(nproc)
 cmake --build neo/build --target install
