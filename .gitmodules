@@ -1,7 +1,6 @@
 [submodule "llvm-project"]
 	path = llvm-project
 	url = https://github.com/llvm/llvm-project
-	branch = release/14.x
 [submodule "vc-intrinsics"]
 	path = vc-intrinsics
 	url = https://github.com/intel/vc-intrinsics
