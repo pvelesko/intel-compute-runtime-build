@@ -24,3 +24,6 @@
 [submodule "igsc"]
 	path = igsc
 	url = https://github.com/intel/igsc
+[submodule "neo"]
+	path = neo
+	url = https://github.com/intel/compute-runtime
