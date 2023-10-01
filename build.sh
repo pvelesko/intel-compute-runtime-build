@@ -90,13 +90,14 @@ fi
 
 if [ $BUILD ]; then
     echo "Building all dependencies"
+    echo "Setting CC=gcc CXX=g++"
 
-    cmake ${BUILD_TOOL} -S gmmlib -B gmmlib/build -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/gmmlib
+    CC=gcc CXX=g++ cmake ${BUILD_TOOL} -S gmmlib -B gmmlib/build -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/gmmlib
     cmake ${BUILD_TOOL} --build gmmlib/build --config Release -j $(nproc)
     cmake ${BUILD_TOOL} --build gmmlib/build --target install -j $(nproc)
 
 
-    cmake ${BUILD_TOOL} -S igsc -B igsc/build -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/igsc
+    CC=gcc CXX=g++ cmake ${BUILD_TOOL} -S igsc -B igsc/build -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/igsc
     cmake ${BUILD_TOOL} --build igsc/build --config Release -j $(nproc)
     cmake ${BUILD_TOOL} --build igsc/build --target install -j $(nproc)
 
@@ -106,7 +107,7 @@ if [ $BUILD ]; then
     cmake ${BUILD_TOOL} --build igc/build --target install  -j $(nproc)
 
 
-    cmake ${BUILD_TOOL} -S neo -B neo/build -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/neo/$DATE -DGMM_DIR=/opt/install/intel/gmmlib -DCMAKE_PREFIX_PATH=${INSTALL_DIR} -DSKIP_UNIT_TESTS=ON -DOCL_ICD_VENDORDIR=${INSTALL_DIR}/opencl
+    cmake ${BUILD_TOOL} -S neo -B neo/build -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/neo/$DATE -DGMM_DIR=${INSTALL_DIR}/gmmlib -DCMAKE_PREFIX_PATH=${INSTALL_DIR} -DSKIP_UNIT_TESTS=ON -DOCL_ICD_VENDORDIR=${INSTALL_DIR}/opencl
     cmake ${BUILD_TOOL} --build neo/build --config Release -j $(nproc)
     cmake ${BUILD_TOOL} --build neo/build --target install -j $(nproc)
 fi
