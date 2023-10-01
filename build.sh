@@ -1,3 +1,4 @@
+#/bin/bash
 # Intel Compute Runtime Depends on:
 # 1. Intel(R) Graphics Compiler (igc)
 # 2. Intel(R) Graphics Memory Management Library (gmmlib)
@@ -77,14 +78,14 @@ fi
 
 if [ $CLEAN ]; then
     echo "Cleaning all dependencies"
-    pushd gmmlib; git clean -fdx; popd
-    pushd igsc; git clean -fdx; popd
-    pushd vc-intrinsics; git clean -fdx; popd
-    pushd llvm-project; git clean -fdx; popd
-    pushd SPIRV-Tools; git clean -fdx; popd
-    pushd SPIRV-Headers; git clean -fdx; popd
-    pushd igc; git clean -fdx; popd
-    pushd neo; git clean -fdx; popd
+    cd gmmlib; git clean -fdx; cd ../
+    cd igsc; git clean -fdx; cd ../
+    cd vc-intrinsics; git clean -fdx; cd ../
+    cd llvm-project; git clean -fdx; cd ../
+    cd SPIRV-Tools; git clean -fdx; cd ../
+    cd SPIRV-Headers; git clean -fdx; cd ../
+    cd igc; git clean -fdx; cd ../
+    cd neo; git clean -fdx; cd ../
 fi
 
 if [ $BUILD ]; then
