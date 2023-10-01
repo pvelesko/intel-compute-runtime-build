@@ -5,7 +5,14 @@
 
 # Argument parsing: --install-dir, --download, --clean, --build, --help
 if [ $# -eq 0 ]; then
-    echo "No arguments supplied"
+    echo "Usage: build.sh [options]"
+    echo "Options:"
+    echo "  -i, --install-dir <path>   Path to install directory"
+    echo "  -d, --download             Download all dependencies"
+    echo "  -c, --clean                Clean all dependencies"
+    echo "  -b, --build                Build all dependencies"
+    echo "  -h, --help                 Show this help message"
+    exit 1
     exit 1
 fi
 
