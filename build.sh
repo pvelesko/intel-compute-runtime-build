@@ -37,12 +37,12 @@ while [ "$1" != "" ]; do
 done
 
 # Require to provide --install-dir if --build
-if [ $BUILD ]; then
-    if [ -z $INSTALL_DIR ]; then
-        echo "Please provide --install-dir"
-        exit 1
-    fi
-fi
+#if [ $BUILD ]; then
+#    if [ -z $INSTALL_DIR ]; then
+#        echo "Please provide --install-dir"
+#        exit 1
+#    fi
+#fi
 
 # get todays date in format 2023.09.30
 DATE=$(date +%Y.%m.%d)
@@ -92,6 +92,7 @@ if [ $BUILD ]; then
     echo "Building all dependencies"
     echo "Setting CC=gcc CXX=g++"
 
+    # if no INSTALL_DIR provided, do not add -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/gmmlib
     CC=gcc CXX=g++ cmake ${BUILD_TOOL} -S gmmlib -B gmmlib/build -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/gmmlib
     cmake ${BUILD_TOOL} --build gmmlib/build --config Release -j $(nproc)
     cmake ${BUILD_TOOL} --build gmmlib/build --target install -j $(nproc)
