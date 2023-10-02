@@ -12,6 +12,7 @@ if [ $# -eq 0 ]; then
     echo "  -d, --download             Download all dependencies"
     echo "  -c, --clean                Clean all dependencies"
     echo "  -b, --build                Build all dependencies"
+    echo "  -m, --modulefiles          Generate modulefiles"
     echo "  -h, --help                 Show this help message"
     exit 1
     exit 1
@@ -21,6 +22,8 @@ while [ "$1" != "" ]; do
     case $1 in
         -i | --install-dir )    shift
                                 INSTALL_DIR=$1
+                                ;;
+        -m | --modulefiles )    MODULEFILES=1
                                 ;;
         -d | --download )       DOWNLOAD=1
                                 ;;
@@ -63,7 +66,7 @@ if [ $HELP ]; then
     echo "  -d, --download             Download all dependencies"
     echo "  -c, --clean                Clean all dependencies"
     echo "  -b, --build                Build all dependencies"
-    echo "  -m, --modulefiles          Generate modulefiles
+    echo "  -m, --modulefiles          Generate modulefiles"
     echo "  -h, --help                 Show this help message"
     exit 1
 fi
@@ -122,5 +125,5 @@ if [ $MODULEFILES ]; then
     yes | gen_modulefile.py  ${IGSC_INSTALL_DIR}
     yes | gen_modulefile.py  ${IGC_INSTALL_DIR}
     yes | gen_modulefile.py  ${NEO_INSTALL_DIR}
-    yes | gen_modulefile.py  ${OCL_ICD_INSTALL_DIR} -e OCL_ICD_VENDORS=$install_dir/intel.icd
+    yes | gen_modulefile.py  ${OCL_ICD_INSTALL_DIR} -e OCL_ICD_VENDORS=${install_dir}/intel.icd
 fi
