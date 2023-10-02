@@ -91,24 +91,25 @@ fi
 if [ $BUILD ]; then
     echo "Building all dependencies"
     echo "Setting CC=gcc CXX=g++"
+    GMMLIB_INSTALL_DIR=${INSTALL_DIR}/gmmlib/$DATE
+    IGSC_INSTALL_DIR=${INSTALL_DIR}/igsc/$DATE
+    IGC_INSTALL_DIR=${INSTALL_DIR}/igc/$DATE
+    NEO_INSTALL_DIR=${INSTALL_DIR}/neo/$DATE
+    OCL_ICD_INSTALL_DIR=${INSTALL_DIR}/opencl/$DATE
 
-    # if no INSTALL_DIR provided, do not add -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/gmmlib
-    CC=gcc CXX=g++ cmake ${BUILD_TOOL} -S gmmlib -B gmmlib/build -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/gmmlib
+    CC=gcc CXX=g++ cmake ${BUILD_TOOL} -S gmmlib -B gmmlib/build -DCMAKE_INSTALL_PREFIX=${GMMLIB_INSTALL_DIR}
     cmake ${BUILD_TOOL} --build gmmlib/build --config Release -j $(nproc)
     cmake ${BUILD_TOOL} --build gmmlib/build --target install -j $(nproc)
 
-
-    CC=gcc CXX=g++ cmake ${BUILD_TOOL} -S igsc -B igsc/build -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/igsc
+    CC=gcc CXX=g++ cmake ${BUILD_TOOL} -S igsc -B igsc/build -DCMAKE_INSTALL_PREFIX=${IGSC_INSTALL_DIR}
     cmake ${BUILD_TOOL} --build igsc/build --config Release -j $(nproc)
     cmake ${BUILD_TOOL} --build igsc/build --target install -j $(nproc)
 
-
-    cmake ${BUILD_TOOL} -S igc -B igc/build -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/igc/$DATE
+    cmake ${BUILD_TOOL} -S igc -B igc/build -DCMAKE_INSTALL_PREFIX=${IGC_INSTALL_DIR}
     cmake ${BUILD_TOOL} --build igc/build --config Release -j $(nproc)
     cmake ${BUILD_TOOL} --build igc/build --target install  -j $(nproc)
 
-
-    cmake ${BUILD_TOOL} -S neo -B neo/build -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/neo/$DATE -DGMM_DIR=${INSTALL_DIR}/gmmlib -DCMAKE_PREFIX_PATH=${INSTALL_DIR} -DSKIP_UNIT_TESTS=ON -DOCL_ICD_VENDORDIR=${INSTALL_DIR}/opencl
+    cmake ${BUILD_TOOL} -S neo -B neo/build -DCMAKE_INSTALL_PREFIX=${NEO_INSTALL_DIR} -DGMM_DIR=${GMMLIB_INSTALL_DIR};${IGC_INSTALL_DIR};${IGSC_INSTALL_DIR} -DCMAKE_PREFIX_PATH=${INSTALL_DIR} -DSKIP_UNIT_TESTS=ON -DOCL_ICD_VENDORDIR=${OCL_ICD_INSTALL_DIR}
     cmake ${BUILD_TOOL} --build neo/build --config Release -j $(nproc)
     cmake ${BUILD_TOOL} --build neo/build --target install -j $(nproc)
 fi
