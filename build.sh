@@ -56,6 +56,7 @@ DATE=$(date +%Y.%m.%d)
 # BUILD_TOOL=" -G Unix Makefiles"
 # BUILD_TOOL="Ninja"
 
+METEE_INSTALL_DIR=${INSTALL_DIR}/metee/$DATE
 GMMLIB_INSTALL_DIR=${INSTALL_DIR}/gmmlib/$DATE
 IGSC_INSTALL_DIR=${INSTALL_DIR}/igsc/$DATE
 IGC_INSTALL_DIR=${INSTALL_DIR}/igc/$DATE
@@ -77,6 +78,7 @@ fi
 if [ $DOWNLOAD ]; then
     echo "Downloading all dependencies"
 
+    git clone git@github.com:intel/metee.git
     git clone git@github.com:intel/gmmlib.git
     git clone git@github.com:intel/igsc.git
     git clone https://github.com/intel/vc-intrinsics vc-intrinsics
@@ -105,11 +107,16 @@ if [ $BUILD ]; then
     echo "Building all dependencies"
     echo "Setting CC=gcc CXX=g++"
 
+
+    CC=gcc CXX=g++ cmake ${BUILD_TOOL} -S metee -B metee/build -DCMAKE_INSTALL_PREFIX=${METEE_INSTALL_DIR}
+    cmake ${BUILD_TOOL} --build metee/build --config Release -j $(nproc)
+    cmake ${BUILD_TOOL} --build metee/build --target install -j $(nproc)
+
     CC=gcc CXX=g++ cmake ${BUILD_TOOL} -S gmmlib -B gmmlib/build -DCMAKE_INSTALL_PREFIX=${GMMLIB_INSTALL_DIR}
     cmake ${BUILD_TOOL} --build gmmlib/build --config Release -j $(nproc)
     cmake ${BUILD_TOOL} --build gmmlib/build --target install -j $(nproc)
 
-    CC=gcc CXX=g++ cmake ${BUILD_TOOL} -S igsc -B igsc/build -DCMAKE_INSTALL_PREFIX=${IGSC_INSTALL_DIR}
+    CC=gcc CXX=g++ cmake ${BUILD_TOOL} -S igsc -B igsc/build -DCMAKE_INSTALL_PREFIX=${IGSC_INSTALL_DIR} -DCMAKE_PREFIX_PATH=${METEE_INSTALL_DIR}
     cmake ${BUILD_TOOL} --build igsc/build --config Release -j $(nproc)
     cmake ${BUILD_TOOL} --build igsc/build --target install -j $(nproc)
 
