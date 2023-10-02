@@ -4,6 +4,9 @@
 # 2. Intel(R) Graphics Memory Management Library (gmmlib)
 # 3. Intel(R) Graphics System Controller Firmware Update Library (igsc)
 
+# stop executing on error
+set -e
+
 # Argument parsing: --install-dir, --download, --clean, --build, --help
 if [ $# -eq 0 ]; then
     echo "Usage: build.sh [options]"
@@ -104,26 +107,27 @@ if [ $BUILD ]; then
 
     CC=gcc CXX=g++ cmake ${BUILD_TOOL} -S gmmlib -B gmmlib/build -DCMAKE_INSTALL_PREFIX=${GMMLIB_INSTALL_DIR}
     cmake ${BUILD_TOOL} --build gmmlib/build --config Release -j $(nproc)
-    sudo cmake ${BUILD_TOOL} --build gmmlib/build --target install -j $(nproc)
+    cmake ${BUILD_TOOL} --build gmmlib/build --target install -j $(nproc)
 
     CC=gcc CXX=g++ cmake ${BUILD_TOOL} -S igsc -B igsc/build -DCMAKE_INSTALL_PREFIX=${IGSC_INSTALL_DIR}
     cmake ${BUILD_TOOL} --build igsc/build --config Release -j $(nproc)
-    sudo cmake ${BUILD_TOOL} --build igsc/build --target install -j $(nproc)
+    cmake ${BUILD_TOOL} --build igsc/build --target install -j $(nproc)
 
     cmake ${BUILD_TOOL} -S igc -B igc/build -DCMAKE_INSTALL_PREFIX=${IGC_INSTALL_DIR}
     cmake ${BUILD_TOOL} --build igc/build --config Release -j $(nproc)
-    sudo cmake ${BUILD_TOOL} --build igc/build --target install  -j $(nproc)
+    cmake ${BUILD_TOOL} --build igc/build --target install  -j $(nproc)
 
-    cmake ${BUILD_TOOL} -S neo -B neo/build -DCMAKE_INSTALL_PREFIX=${NEO_INSTALL_DIR} -DGMM_DIR=${GMMLIB_INSTALL_DIR};${IGC_INSTALL_DIR};${IGSC_INSTALL_DIR} -DCMAKE_PREFIX_PATH=${INSTALL_DIR} -DSKIP_UNIT_TESTS=ON -DOCL_ICD_VENDORDIR=${OCL_ICD_INSTALL_DIR}
+    cmake ${BUILD_TOOL} -S neo -B neo/build -DCMAKE_INSTALL_PREFIX=${NEO_INSTALL_DIR} -DGMM_DIR=${GMMLIB_INSTALL_DIR} -DCMAKE_PREFIX_PATH=${IGSC_INSTALL_DIR} -DSKIP_UNIT_TESTS=ON -DOCL_ICD_VENDORDIR=${OCL_ICD_INSTALL_DIR}
     cmake ${BUILD_TOOL} --build neo/build --config Release -j $(nproc)
-    sudo cmake ${BUILD_TOOL} --build neo/build --target install -j $(nproc)
+    cmake ${BUILD_TOOL} --build neo/build --target install -j $(nproc)
 fi
 
 if [ $MODULEFILES ]; then
     echo "Generating modulefiles"
-    yes | gen_modulefile.py  ${GMMLIB_INSTALL_DIR}
-    yes | gen_modulefile.py  ${IGSC_INSTALL_DIR}
-    yes | gen_modulefile.py  ${IGC_INSTALL_DIR}
-    yes | gen_modulefile.py  ${NEO_INSTALL_DIR}
-    yes | gen_modulefile.py  ${OCL_ICD_INSTALL_DIR} -e OCL_ICD_VENDORS=${install_dir}/intel.icd
+    git submodule update --init
+    yes | ./scripts/gen_modulefile.py  ${GMMLIB_INSTALL_DIR}
+    yes | ./scripts/gen_modulefile.py  ${IGSC_INSTALL_DIR}
+    yes | ./scripts/gen_modulefile.py  ${IGC_INSTALL_DIR}
+    yes | ./scripts/gen_modulefile.py  ${NEO_INSTALL_DIR}
+    yes | ./scripts/gen_modulefile.py  ${OCL_ICD_INSTALL_DIR} -e OCL_ICD_VENDORS=\${install_dir}/intel.icd
 fi

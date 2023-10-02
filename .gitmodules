@@ -26,3 +26,6 @@
 [submodule "neo"]
 	path = neo
 	url = https://github.com/intel/compute-runtime
+[submodule "scripts"]
+	path = scripts
+	url = git@github.com:pvelesko/scripts.git
