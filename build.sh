@@ -107,6 +107,7 @@ if [ $BUILD ]; then
     echo "Building all dependencies"
     echo "Setting CC=gcc CXX=g++"
 
+    pip install mako
 
     CC=gcc CXX=g++ cmake ${BUILD_TOOL} -S metee -B metee/build -DCMAKE_INSTALL_PREFIX=${METEE_INSTALL_DIR}
     cmake ${BUILD_TOOL} --build metee/build --config Release -j $(nproc)
@@ -124,7 +125,7 @@ if [ $BUILD ]; then
     cmake ${BUILD_TOOL} --build igc/build --config Release -j $(nproc)
     cmake ${BUILD_TOOL} --build igc/build --target install  -j $(nproc)
 
-    cmake ${BUILD_TOOL} -S neo -B neo/build -DCMAKE_INSTALL_PREFIX=${NEO_INSTALL_DIR} -DGMM_DIR=${GMMLIB_INSTALL_DIR} -DCMAKE_PREFIX_PATH=${IGSC_INSTALL_DIR} -DSKIP_UNIT_TESTS=ON -DOCL_ICD_VENDORDIR=${OCL_ICD_INSTALL_DIR}
+    cmake ${BUILD_TOOL} -S neo -B neo/build -DCMAKE_INSTALL_PREFIX=${NEO_INSTALL_DIR} -DIGC_DIR=${IGC_INSTALL_DIR} -DGMM_DIR=${GMMLIB_INSTALL_DIR} -DCMAKE_PREFIX_PATH=${IGSC_INSTALL_DIR} -DSKIP_UNIT_TESTS=ON -DOCL_ICD_VENDORDIR=${OCL_ICD_INSTALL_DIR}
     cmake ${BUILD_TOOL} --build neo/build --config Release -j $(nproc)
     cmake ${BUILD_TOOL} --build neo/build --target install -j $(nproc)
 fi
