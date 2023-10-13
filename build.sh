@@ -89,6 +89,7 @@ if [ $DOWNLOAD ]; then
     git clone https://github.com/KhronosGroup/SPIRV-Headers.git SPIRV-Headers
     git clone git@github.com:intel/intel-graphics-compiler.git igc
     git clone git@github.com:intel/compute-runtime.git neo
+    git clone git@github.com:oneapi-src/level-zero.git
 fi
 
 if [ $CLEAN ]; then
@@ -125,7 +126,7 @@ if [ $BUILD ]; then
     cmake ${BUILD_TOOL} --build igc/build --config Release -j $(nproc)
     cmake ${BUILD_TOOL} --build igc/build --target install  -j $(nproc)
 
-    cmake ${BUILD_TOOL} -S neo -B neo/build -DCMAKE_INSTALL_PREFIX=${NEO_INSTALL_DIR} -DIGC_DIR=${IGC_INSTALL_DIR} -DGMM_DIR=${GMMLIB_INSTALL_DIR} -DCMAKE_PREFIX_PATH=${IGSC_INSTALL_DIR} -DSKIP_UNIT_TESTS=ON -DOCL_ICD_VENDORDIR=${OCL_ICD_INSTALL_DIR}
+    cmake ${BUILD_TOOL} -S neo -B neo/build -DCMAKE_INSTALL_PREFIX=${NEO_INSTALL_DIR} -DIGC_DIR=${IGC_INSTALL_DIR} -DGMM_DIR=${GMMLIB_INSTALL_DIR} -DCMAKE_PREFIX_PATH=${IGSC_INSTALL_DIR} -DSKIP_UNIT_TESTS=ON -DOCL_ICD_VENDORDIR=${OCL_ICD_INSTALL_DIR} -DLEVEL_ZERO_ROOT=`pwd`/level-zero
     cmake ${BUILD_TOOL} --build neo/build --config Release -j $(nproc)
     cmake ${BUILD_TOOL} --build neo/build --target install -j $(nproc)
 fi
