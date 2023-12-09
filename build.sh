@@ -7,74 +7,126 @@
 # stop executing on error
 set -e
 
+
+BUILD_TOOL="Ninja"
+# BUILD_TOOL="Unix Makefiles"
+
 if [ $# -eq 0 ]; then
-    echo "Usage: build.sh [options]"
-    echo "Options:"
-    echo "  --download                  Download all dependencies"
-    echo "  --clean                     Clean all dependencies"
-    echo "  --build <install path>      Configure and build everything with CMAKE_INSTALL_PREFIX=<install path>"
-    echo "  --modulefiles               Generate modulefiles, requires --build"
-    echo "  -h, --help                  Show this help message"
-    exit 1
+  echo "Usage: build.sh [options]"
+  echo "Options:"
+  echo "  --download                  Download all dependencies"
+  echo "  --clean                     Clean all dependencies"
+  echo "  --build <install path>      Configure and build everything with CMAKE_INSTALL_PREFIX=<install path>"
+  echo "  --modulefiles               Generate modulefiles, requires --build"
+  echo "  --igc-tag <tag>             Specify the IGC tag"
+  echo "  --neo-tag <tag>             Specify the NEO tag"
+  echo "  -h, --help                  Show this help message"
+  exit 1
 fi
 
 # Parse arguments
 while [ "$#" -gt 0 ]; do
-    case "$1" in
-        --download)
-            DOWNLOAD=true
-            ;;
-        --clean)
-            CLEAN=true
-            ;;
-        --build)
-            BUILD=true
-            shift
-            if [ -z "$1" ] || [[ "$1" == --* ]]; then
-                echo "Error: Invalid path provided for --build : $1"
-                exit 1
-            else
-                INSTALL_DIR="$1"
-            fi
-            ;;
-        --modulefiles)
-          if [ "$BUILD" = false ]; then
-            echo "Build is set to false. Exiting..."
-            exit 1
-          fi
-          MODULEFILES=true
-          ;;
-        -h|--help)
-            HELP=true
-            ;;
-        *)
-            echo "Unknown option: $1"
-            exit 1
-            ;;
-    esac
-    shift
+  case "$1" in
+    --download)
+      DOWNLOAD=true
+      ;;
+    --clean)
+      CLEAN=true
+      ;;
+    --build)
+      BUILD=true
+      shift
+      if [ -z "$1" ] || [[ "$1" == --* ]]; then
+        echo "Error: Invalid path provided for --build : $1"
+        exit 1
+      else
+        INSTALL_DIR="$1"
+      fi
+      ;;
+    --modulefiles)
+      if [ "$BUILD" = false ]; then
+      echo "Build is set to false. Exiting..."
+      exit 1
+      fi
+      MODULEFILES=true
+      ;;
+    --igc-tag)
+      shift
+      if [ -z "$1" ] || [[ "$1" == --* ]]; then
+        echo "Error: Invalid tag provided for --igc-tag : $1"
+        exit 1
+      else
+        IGC_TAG="$1"
+      fi
+      ;;
+    --neo-tag)
+      shift
+      if [ -z "$1" ] || [[ "$1" == --* ]]; then
+        echo "Error: Invalid tag provided for --neo-tag : $1"
+        exit 1
+      else
+        NEO_TAG="$1"
+      fi
+      ;;
+    -h|--help)
+      HELP=true
+      ;;
+    *)
+      echo "Unknown option: $1"
+      exit 1
+      ;;
+  esac
+  shift
 done
 
-# get todays date in format 2023.09.30
-DATE=$(date +%Y.%m.%d)
+checkout_tags() {
+  # if NEO_TAG is not set, use the latest tag
+  if [ -z "$NEO_TAG" ]; then
+    pushd neo
+    git fetch --tags
+    NEO_TAG=$(git describe --tags `git rev-list --tags --max-count=1`)
+    # checkout the tag
+    git checkout -f $NEO_TAG
+    popd
+  fi
 
-# BUILD_TOOL=" -G Unix Makefiles"
-# BUILD_TOOL="Ninja"
+  # if IGC_TAG is not set, use the latest tag
+  if [ -z "$IGC_TAG" ]; then
+    pushd igc
+    git fetch --tags
+    IGC_TAG=$(git describe --tags `git rev-list --tags --max-count=1`)
+    # checkout the tag
+    git checkout -f $IGC_TAG
+    popd
+  fi
 
-# METEE_INSTALL_DIR=${INSTALL_DIR}/metee/$DATE
-# GMMLIB_INSTALL_DIR=${INSTALL_DIR}/gmmlib/$DATE
-# IGSC_INSTALL_DIR=${INSTALL_DIR}/igsc/$DATE
-# IGC_INSTALL_DIR=${INSTALL_DIR}/igc/$DATE
-# NEO_INSTALL_DIR=${INSTALL_DIR}/neo/$DATE
-# OCL_ICD_INSTALL_DIR=${INSTALL_DIR}/opencl/$DATE
+  # Other dependencies don't seem to be frequently updated so just use the latest tag
+  for repo in metee gmmlib igsc vc-intrinsics level-zero; do
+    pushd $repo
+    git fetch --tags
+    TAG=$(git describe --tags `git rev-list --tags --max-count=1`)
+    git checkout -f $TAG
+    popd
+  done
 
-METEE_INSTALL_DIR=${INSTALL_DIR}/metee
-GMMLIB_INSTALL_DIR=${INSTALL_DIR}/gmmlib
-IGSC_INSTALL_DIR=${INSTALL_DIR}/igsc
-IGC_INSTALL_DIR=${INSTALL_DIR}/igc
-LEVEL_ZERO_INSTALL_DIR=${INSTALL_DIR}/level-zero
-NEO_INSTALL_DIR=${INSTALL_DIR}/neo
-OCL_ICD_INSTALL_DIR=${INSTALL_DIR}/opencl
+  # setup install dirs
+  METEE_INSTALL_DIR=${INSTALL_DIR}/metee/${METEE_TAG}
+  GMMLIB_INSTALL_DIR=${INSTALL_DIR}/gmmlib/${GMMLIB_TAG}
+  IGSC_INSTALL_DIR=${INSTALL_DIR}/igsc/${IGSC_TAG}
+  IGC_INSTALL_DIR=${INSTALL_DIR}/igc/${IGC_TAG}
+  NEO_INSTALL_DIR=${INSTALL_DIR}/neo/${NEO_TAG}
+  LEVEL_ZERO_INSTALL_DIR=${INSTALL_DIR}/level-zero/${NEO_TAG}
+  OCL_ICD_INSTALL_DIR=${INSTALL_DIR}/opencl
+
+  #dump install dir vars to cache.txt
+  echo "METEE_INSTALL_DIR=${METEE_INSTALL_DIR}" > cache.txt
+  echo "GMMLIB_INSTALL_DIR=${GMMLIB_INSTALL_DIR}" >> cache.txt
+  echo "IGSC_INSTALL_DIR=${IGSC_INSTALL_DIR}" >> cache.txt
+  echo "IGC_INSTALL_DIR=${IGC_INSTALL_DIR}" >> cache.txt
+  echo "NEO_INSTALL_DIR=${NEO_INSTALL_DIR}" >> cache.txt
+  echo "LEVEL_ZERO_INSTALL_DIR=${LEVEL_ZERO_INSTALL_DIR}" >> cache.txt
+  echo "OCL_ICD_INSTALL_DIR=${OCL_ICD_INSTALL_DIR}" >> cache.txt
+}
 
 if [ $DOWNLOAD ]; then
     echo "Downloading all dependencies"
@@ -95,6 +147,8 @@ fi
 
 if [ $CLEAN ]; then
     echo "Cleaning all dependencies"
+    # find and remove all CMakeLists.txt here
+    find . -name "CMakeLists.txt" -type f -delete
     cd gmmlib; git clean -fdx; rm -rf ./build; cd ../
     cd igsc; git clean -fdx; rm -rf ./build; cd ../
     cd vc-intrinsics; git clean -fdx; rm -rf ./build; cd ../
@@ -107,51 +161,57 @@ fi
 
 # Can't just configure in one step and then build because configuration requires built dependencies
 if [ $BUILD ]; then
+    checkout_tags
+
     echo "Building all dependencies"
     echo "Setting CC=gcc CXX=g++"
 
     pip install mako
     sudo apt install libllvmspirvlib-14-dev llvm-spirv-14 llvm-14 llvm-14-dev clang-14 liblld-14 liblld-14-dev
 
-    CC=gcc CXX=g++ cmake ${BUILD_TOOL} -S metee -B metee/build -DCMAKE_INSTALL_PREFIX=${METEE_INSTALL_DIR}
-    cmake ${BUILD_TOOL} --build metee/build --config Release -j $(nproc)
-    cmake ${BUILD_TOOL} --build metee/build --target install -j $(nproc)
+    rm -f metee/build/CMakeCache.txt
+    CC=gcc CXX=g++ cmake -G "${BUILD_TOOL}" -S metee -B metee/build -DCMAKE_INSTALL_PREFIX=${METEE_INSTALL_DIR}
+    cmake  --build metee/build --config Release -j $(nproc)
+    cmake  --build metee/build --target install -j $(nproc)
 
-    CC=gcc CXX=g++ cmake ${BUILD_TOOL} -S gmmlib -B gmmlib/build -DCMAKE_INSTALL_PREFIX=${GMMLIB_INSTALL_DIR}
-    cmake ${BUILD_TOOL} --build gmmlib/build --config Release -j $(nproc)
-    cmake ${BUILD_TOOL} --build gmmlib/build --target install -j $(nproc)
+    CC=gcc CXX=g++ cmake -G "${BUILD_TOOL}" -S gmmlib -B gmmlib/build -DCMAKE_INSTALL_PREFIX=${GMMLIB_INSTALL_DIR}
+    cmake --build gmmlib/build --config Release -j $(nproc)
+    cmake --build gmmlib/build --target install -j $(nproc)
 
-    CC=gcc CXX=g++ cmake ${BUILD_TOOL} -S igsc -B igsc/build -DCMAKE_INSTALL_PREFIX=${IGSC_INSTALL_DIR} -DCMAKE_PREFIX_PATH=${METEE_INSTALL_DIR}
-    cmake ${BUILD_TOOL} --build igsc/build --config Release -j $(nproc)
-    cmake ${BUILD_TOOL} --build igsc/build --target install -j $(nproc)
+    CC=gcc CXX=g++ cmake -G "${BUILD_TOOL}" -S igsc -B igsc/build -DCMAKE_INSTALL_PREFIX=${IGSC_INSTALL_DIR} -DCMAKE_PREFIX_PATH=${METEE_INSTALL_DIR}
+    cmake --build igsc/build --config Release -j $(nproc)
+    cmake --build igsc/build --target install -j $(nproc)
 
-    cmake ${BUILD_TOOL} -S igc -B igc/build -DCMAKE_INSTALL_PREFIX=${IGC_INSTALL_DIR} -DIGC_OPTION__SPIRV_TOOLS_MODE=Prebuilds -DIGC_OPTION__USE_PREINSTALLED_SPIRV_HEADERS=ON -DIGC_OPTION__LLVM_PREFERRED_VERSION=14.0.0
-    cmake ${BUILD_TOOL} --build igc/build --config Release -j $(nproc)
-    cmake ${BUILD_TOOL} --build igc/build --target install  -j $(nproc)
+    cmake -G "${BUILD_TOOL}" -S igc -B igc/build -DCMAKE_INSTALL_PREFIX=${IGC_INSTALL_DIR} -DIGC_OPTION__SPIRV_TOOLS_MODE=Prebuilds -DIGC_OPTION__USE_PREINSTALLED_SPIRV_HEADERS=ON -DIGC_OPTION__LLVM_PREFERRED_VERSION=14.0.0
+    cmake --build igc/build --config Release -j $(nproc)
+    cmake --build igc/build --target install  -j $(nproc)
 
-    cmake -S level-zero -B level-zero/build -DCMAKE_INSTALL_PREFIX=${LEVEL_ZERO_INSTALL_DIR} 
-    cmake ${BUILD_TOOL} --build level-zero/build --config Release -j $(nproc)
-    cmake ${BUILD_TOOL} --build level-zero/build --target install  -j $(nproc)
+    cmake -G "${BUILD_TOOL}" -S level-zero -B level-zero/build -DCMAKE_INSTALL_PREFIX=${LEVEL_ZERO_INSTALL_DIR} 
+    cmake --build level-zero/build --config Release -j $(nproc)
+    cmake --build level-zero/build --target install  -j $(nproc)
 
-    cmake ${BUILD_TOOL} -S neo -B neo/build -DCMAKE_INSTALL_PREFIX=${NEO_INSTALL_DIR} -DIGC_DIR=${IGC_INSTALL_DIR} -DGMM_DIR=${GMMLIB_INSTALL_DIR} -DCMAKE_PREFIX_PATH=${IGSC_INSTALL_DIR} -DSKIP_UNIT_TESTS=ON -DOCL_ICD_VENDORDIR=${OCL_ICD_INSTALL_DIR} -DLevelZero_INCLUDE_DIR=${LEVEL_ZERO_INSTALL_DIR}/include
-    cmake ${BUILD_TOOL} --build neo/build --config Release -j $(nproc)
-    cmake ${BUILD_TOOL} --build neo/build --target install -j $(nproc)
+    cmake -G "${BUILD_TOOL}" -S neo -B neo/build -DCMAKE_INSTALL_PREFIX=${NEO_INSTALL_DIR} -DIGC_DIR=${IGC_INSTALL_DIR} -DGMM_DIR=${GMMLIB_INSTALL_DIR} -DCMAKE_PREFIX_PATH=${IGSC_INSTALL_DIR} -DSKIP_UNIT_TESTS=ON -DOCL_ICD_VENDORDIR=${OCL_ICD_INSTALL_DIR} -DLevelZero_INCLUDE_DIR=${LEVEL_ZERO_INSTALL_DIR}/include
+    cmake --build neo/build --config Release -j $(nproc)
+    cmake --build neo/build --target install -j $(nproc)
 
-    if [ $MODULEFILES ]; then
-    # make sure that ./scripts/gen_modulefile.py exists
-    if [ ! -f ./scripts/gen_modulefile.py ]; then
-        ehco "Downloading gen_modulefile.py"
-        git submodule update --init
-    fi
-    echo "Generating modulefiles ${GMMLIB_INSTALL_DIR}"
-    yes | ./scripts/gen_modulefile.py  ${GMMLIB_INSTALL_DIR}
-    yes | ./scripts/gen_modulefile.py  ${IGSC_INSTALL_DIR}
-    yes | ./scripts/gen_modulefile.py  ${IGC_INSTALL_DIR}
-    yes | ./scripts/gen_modulefile.py  ${NEO_INSTALL_DIR}
-    yes | ./scripts/gen_modulefile.py  ${LEVEL_ZERO_INSTALL_DIR}
-    # install_dir is a variable used by gen_modulefile.py
-    yes | ./scripts/gen_modulefile.py  ${OCL_ICD_INSTALL_DIR} -e OCL_ICD_VENDORS=\${install_dir}/intel.icd
-    fi
+
 
 fi
 
+
+if [ $MODULEFILES ]; then
+  # make sure that ./scripts/gen_modulefile.py exists
+  if [ ! -f ./scripts/gen_modulefile.py ]; then
+      ehco "Downloading gen_modulefile.py"
+      git submodule update --init
+  fi
+  source cache.txt
+  yes | ./scripts/gen_modulefile.py  ${GMMLIB_INSTALL_DIR}
+  yes | ./scripts/gen_modulefile.py  ${IGSC_INSTALL_DIR}
+  yes | ./scripts/gen_modulefile.py  ${IGC_INSTALL_DIR}
+  yes | ./scripts/gen_modulefile.py  ${NEO_INSTALL_DIR}
+  yes | ./scripts/gen_modulefile.py  ${LEVEL_ZERO_INSTALL_DIR}
+  # install_dir is a variable used by gen_modulefile.py
+  yes | ./scripts/gen_modulefile.py  ${OCL_ICD_INSTALL_DIR} -e OCL_ICD_VENDORS=\${install_dir}/intel.icd
+fi
+  
