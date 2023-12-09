@@ -13,7 +13,7 @@ if [ $# -eq 0 ]; then
     echo "  --download                  Download all dependencies"
     echo "  --clean                     Clean all dependencies"
     echo "  --build <install path>      Configure and build everything with CMAKE_INSTALL_PREFIX=<install path>"
-    echo "  --modulefiles               Generate modulefiles"
+    echo "  --modulefiles               Generate modulefiles, requires --build"
     echo "  -h, --help                  Show this help message"
     exit 1
 fi
@@ -38,8 +38,12 @@ while [ "$#" -gt 0 ]; do
             fi
             ;;
         --modulefiles)
-            MODULEFILES=true
-            ;;
+          if [ "$BUILD" = false ]; then
+            echo "Build is set to false. Exiting..."
+            exit 1
+          fi
+          MODULEFILES=true
+          ;;
         -h|--help)
             HELP=true
             ;;
@@ -132,15 +136,14 @@ if [ $BUILD ]; then
     cmake ${BUILD_TOOL} -S neo -B neo/build -DCMAKE_INSTALL_PREFIX=${NEO_INSTALL_DIR} -DIGC_DIR=${IGC_INSTALL_DIR} -DGMM_DIR=${GMMLIB_INSTALL_DIR} -DCMAKE_PREFIX_PATH=${IGSC_INSTALL_DIR} -DSKIP_UNIT_TESTS=ON -DOCL_ICD_VENDORDIR=${OCL_ICD_INSTALL_DIR} -DLevelZero_INCLUDE_DIR=${LEVEL_ZERO_INSTALL_DIR}/include
     cmake ${BUILD_TOOL} --build neo/build --config Release -j $(nproc)
     cmake ${BUILD_TOOL} --build neo/build --target install -j $(nproc)
-fi
 
-if [ $MODULEFILES ]; then
+    if [ $MODULEFILES ]; then
     # make sure that ./scripts/gen_modulefile.py exists
     if [ ! -f ./scripts/gen_modulefile.py ]; then
         ehco "Downloading gen_modulefile.py"
         git submodule update --init
     fi
-    echo "Generating modulefiles"
+    echo "Generating modulefiles ${GMMLIB_INSTALL_DIR}"
     yes | ./scripts/gen_modulefile.py  ${GMMLIB_INSTALL_DIR}
     yes | ./scripts/gen_modulefile.py  ${IGSC_INSTALL_DIR}
     yes | ./scripts/gen_modulefile.py  ${IGC_INSTALL_DIR}
@@ -148,4 +151,7 @@ if [ $MODULEFILES ]; then
     yes | ./scripts/gen_modulefile.py  ${LEVEL_ZERO_INSTALL_DIR}
     # install_dir is a variable used by gen_modulefile.py
     yes | ./scripts/gen_modulefile.py  ${OCL_ICD_INSTALL_DIR} -e OCL_ICD_VENDORS=\${install_dir}/intel.icd
+    fi
+
 fi
+
