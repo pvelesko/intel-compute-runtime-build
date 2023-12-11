@@ -203,7 +203,7 @@ if [ $BUILD ]; then
 
     if [ ! -d ${NEO_INSTALL_DIR} ]; then
       rm  -f neo/build/CMakeCache.txt
-      cmake -G "${BUILD_TOOL}" -S neo -B neo/build -DCMAKE_INSTALL_PREFIX=${NEO_INSTALL_DIR} -DIGC_DIR=${IGC_INSTALL_DIR} -DGMM_DIR=${GMMLIB_INSTALL_DIR} -DCMAKE_PREFIX_PATH=${IGSC_INSTALL_DIR} -DSKIP_UNIT_TESTS=ON -DOCL_ICD_VENDORDIR=${NEO_INSTALL_DIR}/share/OpenCL/vendors -DLevelZero_INCLUDE_DIR=${LEVEL_ZERO_INSTALL_DIR}/include
+      cmake -G "${BUILD_TOOL}" -S neo -B neo/build -DCMAKE_INSTALL_PREFIX=${NEO_INSTALL_DIR} -DIGC_DIR=${IGC_INSTALL_DIR} -DGMM_DIR=${GMMLIB_INSTALL_DIR} -DCMAKE_PREFIX_PATH=${IGSC_INSTALL_DIR} -DSKIP_UNIT_TESTS=ON -DOCL_ICD_VENDORDIR=${NEO_INSTALL_DIR}/etc/OpenCL/vendors -DLevelZero_INCLUDE_DIR=${LEVEL_ZERO_INSTALL_DIR}/include
       cmake --build neo/build --config Release -j $(nproc)
       cmake --build neo/build --target install -j $(nproc)
     fi
@@ -213,16 +213,14 @@ fi
 if [ $MODULEFILES ]; then
   # make sure that ./scripts/gen_modulefile.py exists
   if [ ! -f ./scripts/gen_modulefile.py ]; then
-      ehco "Downloading gen_modulefile.py"
+      echo "Downloading gen_modulefile.py"
       git submodule update --init
   fi
   source cache.txt
   yes | ./scripts/gen_modulefile.py  ${GMMLIB_INSTALL_DIR}
   yes | ./scripts/gen_modulefile.py  ${IGSC_INSTALL_DIR}
   yes | ./scripts/gen_modulefile.py  ${IGC_INSTALL_DIR}
-  yes | ./scripts/gen_modulefile.py  ${NEO_INSTALL_DIR}
+  yes | ./scripts/gen_modulefile.py  ${NEO_INSTALL_DIR} -e OCL_ICD_VENDORS=\${install_dir}/etc/OpenCL/vendors
   yes | ./scripts/gen_modulefile.py  ${LEVEL_ZERO_INSTALL_DIR}
-  # install_dir is a variable used by gen_modulefile.py
-  yes | ./scripts/gen_modulefile.py  ${OCL_ICD_INSTALL_DIR} -e OCL_ICD_VENDORS=\${install_dir}/intel.icd
 fi
   
