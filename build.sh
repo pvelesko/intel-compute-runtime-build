@@ -17,7 +17,6 @@ if [ $# -eq 0 ]; then
   echo "  --download                  Download all dependencies"
   echo "  --clean                     Clean all dependencies"
   echo "  --build <install path>      Configure and build everything with CMAKE_INSTALL_PREFIX=<install path>"
-  echo "  --build-llvm <on|off>       Build LLVM and SPIRV-LLVM-Translator"
   echo "  --modulefiles               Generate modulefiles"
   echo "  --igc-tag <tag>             Specify the IGC tag"
   echo "  --neo-tag <tag>             Specify the NEO tag"
@@ -63,13 +62,6 @@ while [ "$#" -gt 0 ]; do
         exit 1
       else
         NEO_TAG="$1"
-      fi
-      ;;
-    --build-llvm=*)
-      BUILD_LLVM="${1#*=}"
-      if [ "$BUILD_LLVM" != "on" ] && [ "$BUILD_LLVM" != "off" ]; then
-        echo "Error: Invalid value provided for --build-llvm : $BUILD_LLVM"
-        exit 1
       fi
       ;;
     -h|--help)
@@ -132,14 +124,11 @@ checkout_tags() {
   echo "OCL_ICD_INSTALL_DIR=${OCL_ICD_INSTALL_DIR}" | tee -a cache.txt
 }
 
-LLVM_OPTS="-DIGC_OPTION__SPIRV_TOOLS_MODE=Prebuilds -DIGC_OPTION__USE_PREINSTALLED_SPIRV_HEADERS=ON -DIGC_OPTION__LLVM_PREFERRED_VERSION=14.0.0"
-if [ $BUILD_LLVM == "on" ]; then
-  git clone -b llvmorg-14.0.5 https://github.com/llvm/llvm-project llvm-project
-  git clone -b ocl-open-140 https://github.com/intel/opencl-clang llvm-project/llvm/projects/opencl-clang
-  git clone -b llvm_release_140 https://github.com/KhronosGroup/SPIRV-LLVM-Translator llvm-project/llvm/projects/llvm-spirv
-  LLVM_OPTS=""
-fi 
-echo "LLVM_OPTS=${LLVM_OPTS}" | tee -a cache.txt
+# git clone -b llvmorg-14.0.5 https://github.com/llvm/llvm-project llvm-project
+# git clone -b ocl-open-140 https://github.com/intel/opencl-clang llvm-project/llvm/projects/opencl-clang
+# git clone -b llvm_release_140 https://github.com/KhronosGroup/SPIRV-LLVM-Translator llvm-project/llvm/projects/llvm-spirv
+
+LLVM_OPTS="-DIGC_OPTION__SPIRV_TOOLS_MODE=Prebuilds -DIGC_OPTION__LLVM_PREFERRED_VERSION=14.0.5"
 
 if [ $DOWNLOAD ]; then
     echo "Downloading all dependencies"
