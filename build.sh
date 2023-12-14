@@ -132,6 +132,7 @@ checkout_tags() {
   echo "OCL_ICD_INSTALL_DIR=${OCL_ICD_INSTALL_DIR}" | tee -a cache.txt
 }
 
+LLVM_OPTS="-DIGC_OPTION__SPIRV_TOOLS_MODE=Prebuilds -DIGC_OPTION__USE_PREINSTALLED_SPIRV_HEADERS=ON -DIGC_OPTION__LLVM_PREFERRED_VERSION=14.0.0"
 if [ $DOWNLOAD ]; then
     echo "Downloading all dependencies"
 
@@ -143,6 +144,7 @@ if [ $DOWNLOAD ]; then
       git clone -b llvmorg-14.0.5 https://github.com/llvm/llvm-project llvm-project
       git clone -b ocl-open-140 https://github.com/intel/opencl-clang llvm-project/llvm/projects/opencl-clang
       git clone -b llvm_release_140 https://github.com/KhronosGroup/SPIRV-LLVM-Translator llvm-project/llvm/projects/llvm-spirv
+      LLVM_OPTS=""
     fi 
     git clone https://github.com/KhronosGroup/SPIRV-Tools.git SPIRV-Tools
     git clone https://github.com/KhronosGroup/SPIRV-Headers.git SPIRV-Headers
@@ -199,7 +201,7 @@ if [ $BUILD ]; then
 
     if [ ! -d ${IGC_INSTALL_DIR} ]; then
       rm -f igc/build/CMakeCache.txt
-      cmake -G "${BUILD_TOOL}" -S igc -B igc/build -DCMAKE_INSTALL_PREFIX=${IGC_INSTALL_DIR} -DIGC_OPTION__SPIRV_TOOLS_MODE=Prebuilds -DIGC_OPTION__USE_PREINSTALLED_SPIRV_HEADERS=ON -DIGC_OPTION__LLVM_PREFERRED_VERSION=14.0.0
+      cmake -G "${BUILD_TOOL}" -S igc -B igc/build -DCMAKE_INSTALL_PREFIX=${IGC_INSTALL_DIR} ${LLVM_OPTS}
       cmake --build igc/build --config Release -j $(nproc)
       cmake --build igc/build --target install  -j $(nproc)
     fi
