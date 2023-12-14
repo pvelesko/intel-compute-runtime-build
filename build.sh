@@ -17,6 +17,7 @@ if [ $# -eq 0 ]; then
   echo "  --download                  Download all dependencies"
   echo "  --clean                     Clean all dependencies"
   echo "  --build <install path>      Configure and build everything with CMAKE_INSTALL_PREFIX=<install path>"
+  echo "  --build-llvm <on|off>       Build LLVM and SPIRV-LLVM-Translator"
   echo "  --modulefiles               Generate modulefiles"
   echo "  --igc-tag <tag>             Specify the IGC tag"
   echo "  --neo-tag <tag>             Specify the NEO tag"
@@ -62,6 +63,13 @@ while [ "$#" -gt 0 ]; do
         exit 1
       else
         NEO_TAG="$1"
+      fi
+      ;;
+    --build-llvm=*)
+      BUILD_LLVM="${1#*=}"
+      if [ "$BUILD_LLVM" != "on" ] && [ "$BUILD_LLVM" != "off" ]; then
+        echo "Error: Invalid value provided for --build-llvm : $BUILD_LLVM"
+        exit 1
       fi
       ;;
     -h|--help)
@@ -131,9 +139,11 @@ if [ $DOWNLOAD ]; then
     git clone git@github.com:intel/gmmlib.git
     git clone git@github.com:intel/igsc.git
     git clone https://github.com/intel/vc-intrinsics vc-intrinsics
-    # git clone -b llvmorg-14.0.5 https://github.com/llvm/llvm-project llvm-project
-    # git clone -b ocl-open-140 https://github.com/intel/opencl-clang llvm-project/llvm/projects/opencl-clang
-    # git clone -b llvm_release_140 https://github.com/KhronosGroup/SPIRV-LLVM-Translator llvm-project/llvm/projects/llvm-spirv
+    if [ $BUILD_LLVM == "on" ]; then
+      git clone -b llvmorg-14.0.5 https://github.com/llvm/llvm-project llvm-project
+      git clone -b ocl-open-140 https://github.com/intel/opencl-clang llvm-project/llvm/projects/opencl-clang
+      git clone -b llvm_release_140 https://github.com/KhronosGroup/SPIRV-LLVM-Translator llvm-project/llvm/projects/llvm-spirv
+    fi 
     git clone https://github.com/KhronosGroup/SPIRV-Tools.git SPIRV-Tools
     git clone https://github.com/KhronosGroup/SPIRV-Headers.git SPIRV-Headers
     git clone git@github.com:intel/intel-graphics-compiler.git igc
@@ -162,7 +172,7 @@ if [ $BUILD ]; then
     echo "Building all dependencies"
     echo "Setting CC=gcc CXX=g++"
 
-    # pip install mako
+    pip install mako
     # sudo apt install libllvmspirvlib-14-dev llvm-spirv-14 llvm-14 llvm-14-dev clang-14 liblld-14 liblld-14-dev
 
     # check if installed, if not install
