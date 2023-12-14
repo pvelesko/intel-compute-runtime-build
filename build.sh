@@ -135,9 +135,9 @@ checkout_tags() {
 if [ $DOWNLOAD ]; then
     echo "Downloading all dependencies"
 
-    git clone git@github.com:intel/metee.git
-    git clone git@github.com:intel/gmmlib.git
-    git clone git@github.com:intel/igsc.git
+    git clone https://github.com/intel/metee.git
+    git clone https://github.com/intel/gmmlib.git
+    git clone https://github.com/intel/igsc.git
     git clone https://github.com/intel/vc-intrinsics vc-intrinsics
     if [ $BUILD_LLVM == "on" ]; then
       git clone -b llvmorg-14.0.5 https://github.com/llvm/llvm-project llvm-project
@@ -146,9 +146,9 @@ if [ $DOWNLOAD ]; then
     fi 
     git clone https://github.com/KhronosGroup/SPIRV-Tools.git SPIRV-Tools
     git clone https://github.com/KhronosGroup/SPIRV-Headers.git SPIRV-Headers
-    git clone git@github.com:intel/intel-graphics-compiler.git igc
-    git clone git@github.com:intel/compute-runtime.git neo
-    git clone git@github.com:oneapi-src/level-zero.git
+    git clone https://github.com/intel/intel-graphics-compiler.git igc
+    git clone https://github.com/intel/compute-runtime.git neo
+    git clone https://github.com/oneapi-src/level-zero.git
 fi
 
 if [ $CLEAN ]; then
