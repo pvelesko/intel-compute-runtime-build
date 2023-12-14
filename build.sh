@@ -133,6 +133,14 @@ checkout_tags() {
 }
 
 LLVM_OPTS="-DIGC_OPTION__SPIRV_TOOLS_MODE=Prebuilds -DIGC_OPTION__USE_PREINSTALLED_SPIRV_HEADERS=ON -DIGC_OPTION__LLVM_PREFERRED_VERSION=14.0.0"
+if [ $BUILD_LLVM == "on" ]; then
+  git clone -b llvmorg-14.0.5 https://github.com/llvm/llvm-project llvm-project
+  git clone -b ocl-open-140 https://github.com/intel/opencl-clang llvm-project/llvm/projects/opencl-clang
+  git clone -b llvm_release_140 https://github.com/KhronosGroup/SPIRV-LLVM-Translator llvm-project/llvm/projects/llvm-spirv
+  LLVM_OPTS=""
+fi 
+echo "LLVM_OPTS=${LLVM_OPTS}" | tee -a cache.txt
+
 if [ $DOWNLOAD ]; then
     echo "Downloading all dependencies"
 
@@ -140,12 +148,6 @@ if [ $DOWNLOAD ]; then
     git clone https://github.com/intel/gmmlib.git
     git clone https://github.com/intel/igsc.git
     git clone https://github.com/intel/vc-intrinsics vc-intrinsics
-    if [ $BUILD_LLVM == "on" ]; then
-      git clone -b llvmorg-14.0.5 https://github.com/llvm/llvm-project llvm-project
-      git clone -b ocl-open-140 https://github.com/intel/opencl-clang llvm-project/llvm/projects/opencl-clang
-      git clone -b llvm_release_140 https://github.com/KhronosGroup/SPIRV-LLVM-Translator llvm-project/llvm/projects/llvm-spirv
-      LLVM_OPTS=""
-    fi 
     git clone https://github.com/KhronosGroup/SPIRV-Tools.git SPIRV-Tools
     git clone https://github.com/KhronosGroup/SPIRV-Headers.git SPIRV-Headers
     git clone https://github.com/intel/intel-graphics-compiler.git igc
@@ -170,6 +172,7 @@ fi
 # Can't just configure in one step and then build because configuration requires built dependencies
 if [ $BUILD ]; then
     checkout_tags
+    source cache.txt
 
     echo "Building all dependencies"
     echo "Setting CC=gcc CXX=g++"
