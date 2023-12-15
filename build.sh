@@ -124,9 +124,7 @@ checkout_tags() {
   echo "OCL_ICD_INSTALL_DIR=${OCL_ICD_INSTALL_DIR}" | tee -a cache.txt
 }
 
-# git clone -b llvmorg-14.0.5 https://github.com/llvm/llvm-project llvm-project
-# git clone -b ocl-open-140 https://github.com/intel/opencl-clang llvm-project/llvm/projects/opencl-clang
-# git clone -b llvm_release_140 https://github.com/KhronosGroup/SPIRV-LLVM-Translator llvm-project/llvm/projects/llvm-spirv
+
 
 LLVM_OPTS="-DIGC_OPTION__SPIRV_TOOLS_MODE=Prebuilds -DIGC_OPTION__LLVM_PREFERRED_VERSION=14.0.5"
 
@@ -142,6 +140,9 @@ if [ $DOWNLOAD ]; then
     git clone https://github.com/intel/intel-graphics-compiler.git igc
     git clone https://github.com/intel/compute-runtime.git neo
     git clone https://github.com/oneapi-src/level-zero.git
+    git clone -b llvmorg-14.0.5 https://github.com/llvm/llvm-project llvm-project
+    git clone -b ocl-open-140 https://github.com/intel/opencl-clang llvm-project/llvm/projects/opencl-clang
+    git clone -b llvm_release_140 https://github.com/KhronosGroup/SPIRV-LLVM-Translator llvm-project/llvm/projects/llvm-spirv
 fi
 
 if [ $CLEAN ]; then
