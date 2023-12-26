@@ -128,7 +128,10 @@ checkout_tags() {
 # git clone -b ocl-open-140 https://github.com/intel/opencl-clang llvm-project/llvm/projects/opencl-clang
 # git clone -b llvm_release_140 https://github.com/KhronosGroup/SPIRV-LLVM-Translator llvm-project/llvm/projects/llvm-spirv
 
-LLVM_OPTS="-DIGC_OPTION__SPIRV_TOOLS_MODE=Prebuilds -DIGC_OPTION__LLVM_PREFERRED_VERSION=14.0.5"
+
+LLVM_VERSION=$(clang-14 --version | grep -o 'version [0-9]*\.[0-9]*\.[0-9]*' | awk '{print $2}')
+
+LLVM_OPTS="-DIGC_OPTION__SPIRV_TOOLS_MODE=Prebuilds -DIGC_OPTION__LLVM_PREFERRED_VERSION=${LLVM_VERSION}"
 
 if [ $DOWNLOAD ]; then
     echo "Downloading all dependencies"
@@ -137,12 +140,16 @@ if [ $DOWNLOAD ]; then
     git clone https://github.com/intel/gmmlib.git
     git clone https://github.com/intel/igsc.git
     git clone https://github.com/intel/vc-intrinsics vc-intrinsics
-    git clone https://github.com/KhronosGroup/SPIRV-Tools.git SPIRV-Tools
-    git clone https://github.com/KhronosGroup/SPIRV-Headers.git SPIRV-Headers
     git clone https://github.com/intel/intel-graphics-compiler.git igc
     git clone https://github.com/intel/compute-runtime.git neo
     git clone https://github.com/oneapi-src/level-zero.git
+
 fi
+
+# git clone https://github.com/KhronosGroup/SPIRV-Tools.git SPIRV-Tools
+# cd SPIRV-Tools/external/
+# git clone https://github.com/KhronosGroup/SPIRV-Headers.git spirv-headers
+# cd ../; make build; cd build; cmake ../ -DCMAKE_INSTALL_PREFIX=../../install; make install; cd ../../
 
 if [ $CLEAN ]; then
     echo "Cleaning all dependencies"
@@ -220,11 +227,16 @@ if [ $MODULEFILES ]; then
       echo "Downloading gen_modulefile.py"
       git submodule update --init
   fi
+
+  # prompt the user to enter the modulefiles directory
+  echo "Enter the modulefiles directory"
+  read MODULEFILES_DIR
+
   source cache.txt
-  yes | ./scripts/gen_modulefile.py  ${GMMLIB_INSTALL_DIR}
-  yes | ./scripts/gen_modulefile.py  ${IGSC_INSTALL_DIR}
-  yes | ./scripts/gen_modulefile.py  ${IGC_INSTALL_DIR}
-  yes | ./scripts/gen_modulefile.py  ${NEO_INSTALL_DIR} -e OCL_ICD_VENDORS=\${install_dir}/etc/OpenCL/vendors
-  yes | ./scripts/gen_modulefile.py  ${LEVEL_ZERO_INSTALL_DIR}
+  yes | ./scripts/gen_modulefile.py --modulefiles $MODULEFILES_DIR ${GMMLIB_INSTALL_DIR}
+  yes | ./scripts/gen_modulefile.py --modulefiles $MODULEFILES_DIR ${IGSC_INSTALL_DIR}
+  yes | ./scripts/gen_modulefile.py --modulefiles $MODULEFILES_DIR ${IGC_INSTALL_DIR}
+  yes | ./scripts/gen_modulefile.py --modulefiles $MODULEFILES_DIR ${NEO_INSTALL_DIR} -e OCL_ICD_VENDORS=\${install_dir}/etc/OpenCL/vendors
+  yes | ./scripts/gen_modulefile.py --modulefiles $MODULEFILES_DIR ${LEVEL_ZERO_INSTALL_DIR}
 fi
   
