@@ -187,7 +187,7 @@ if [ $BUILD ]; then
 
     if [ ! -d ${LEVEL_ZERO_INSTALL_DIR} ]; then
       rm -f level-zero/build/CMakeCache.txt
-      CC=gcc CXX=g++ cmake -G "${BUILD_TOOL}" -S level-zero -B level-zero/build -DCMAKE_INSTALL_PREFIX=${LEVEL_ZERO_INSTALL_DIR} -DIGC_DIR=${IGC_INSTALL_DIR}
+      CC=gcc CXX=g++ cmake -G "${BUILD_TOOL}" -S level-zero -B level-zero/build -DCMAKE_INSTALL_PREFIX=${LEVEL_ZERO_INSTALL_DIR} -DIGC_DIR=${IGC_INSTALL_DIR} -DCMAKE_PREFIX_PATH=${IGSC_INSTALL_DIR}
       cmake --build level-zero/build --config Release -j $(nproc)
       cmake --build level-zero/build --target install  -j $(nproc)
     fi
