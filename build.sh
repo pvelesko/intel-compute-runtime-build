@@ -8,8 +8,8 @@
 set -e
 
 
-BUILD_TOOL="Ninja"
-# BUILD_TOOL="Unix Makefiles"
+# BUILD_TOOL="Ninja"
+BUILD_TOOL="Unix Makefiles"
 
 if [ $# -eq 0 ]; then
   echo "Usage: build.sh [options]"
@@ -124,14 +124,9 @@ checkout_tags() {
   echo "OCL_ICD_INSTALL_DIR=${OCL_ICD_INSTALL_DIR}" | tee -a cache.txt
 }
 
-# git clone -b llvmorg-14.0.5 https://github.com/llvm/llvm-project llvm-project
-# git clone -b ocl-open-140 https://github.com/intel/opencl-clang llvm-project/llvm/projects/opencl-clang
-# git clone -b llvm_release_140 https://github.com/KhronosGroup/SPIRV-LLVM-Translator llvm-project/llvm/projects/llvm-spirv
-
-
 LLVM_VERSION=$(clang-14 --version | grep -o 'version [0-9]*\.[0-9]*\.[0-9]*' | awk '{print $2}')
 
-LLVM_OPTS="-DIGC_OPTION__SPIRV_TOOLS_MODE=Prebuilds -DIGC_OPTION__LLVM_PREFERRED_VERSION=${LLVM_VERSION}"
+IGC_OPTS="-DIGC_OPTION__ARCHITECTURE_TARGET=Linux64 -DIGC_OPTION__LLVM_MODE=Prebuilds -DLLVM_ROOT=$(dirname $(dirname $(which clang++))) -DIGC_OPTION__SPIRV_TOOLS_MODE=Prebuilds -DIGC_OPTION__LLVM_PREFERRED_VERSION=${LLVM_VERSION}"
 
 if [ $DOWNLOAD ]; then
     echo "Downloading all dependencies"
@@ -143,26 +138,10 @@ if [ $DOWNLOAD ]; then
     git clone https://github.com/intel/intel-graphics-compiler.git igc
     git clone https://github.com/intel/compute-runtime.git neo
     git clone https://github.com/oneapi-src/level-zero.git
-
 fi
 
-# git clone https://github.com/KhronosGroup/SPIRV-Tools.git SPIRV-Tools
-# cd SPIRV-Tools/external/
-# git clone https://github.com/KhronosGroup/SPIRV-Headers.git spirv-headers
-# cd ../; make build; cd build; cmake ../ -DCMAKE_INSTALL_PREFIX=../../install; make install; cd ../../
-
 if [ $CLEAN ]; then
-    echo "Cleaning all dependencies"
-    # find and remove all CMakeLists.txt here
-    find . -name "CMakeLists.txt" -type f -delete
-    # cd gmmlib; git clean -fdx; rm -rf ./build; cd ../
-    # cd igsc; git clean -fdx; rm -rf ./build; cd ../
-    # cd vc-intrinsics; git clean -fdx; rm -rf ./build; cd ../
-    # # cd llvm-project; git clean -fdx; rm -rf ./build; cd ../
-    # # cd SPIRV-Tools; git clean -fdx; rm -rf ./build; cd ../
-    # # cd SPIRV-Headers; git clean -fdx; rm -rf ./build; cd ../
-    # cd igc; git clean -fdx; rm -rf ./build; cd ../
-    # cd neo; git clean -fdx; rm -rf ./build; cd ../
+    echo "clean - TODO"
 fi
 
 # Can't just configure in one step and then build because configuration requires built dependencies
@@ -200,21 +179,21 @@ if [ $BUILD ]; then
 
     if [ ! -d ${IGC_INSTALL_DIR} ]; then
       rm -f igc/build/CMakeCache.txt
-      cmake -G "${BUILD_TOOL}" -S igc -B igc/build -DCMAKE_INSTALL_PREFIX=${IGC_INSTALL_DIR} ${LLVM_OPTS}
+      CC=gcc CXX=g++ cmake -G "${BUILD_TOOL}" -S igc -B igc/build -DCMAKE_INSTALL_PREFIX=${IGC_INSTALL_DIR} ${IGC_OPTS}
       cmake --build igc/build --config Release -j $(nproc)
       cmake --build igc/build --target install  -j $(nproc)
     fi
 
     if [ ! -d ${LEVEL_ZERO_INSTALL_DIR} ]; then
       rm -f level-zero/build/CMakeCache.txt
-      cmake -G "${BUILD_TOOL}" -S level-zero -B level-zero/build -DCMAKE_INSTALL_PREFIX=${LEVEL_ZERO_INSTALL_DIR} 
+      CC=gcc CXX=g++ cmake -G "${BUILD_TOOL}" -S level-zero -B level-zero/build -DCMAKE_INSTALL_PREFIX=${LEVEL_ZERO_INSTALL_DIR} -DIGC_DIR=${IGC_INSTALL_DIR}
       cmake --build level-zero/build --config Release -j $(nproc)
       cmake --build level-zero/build --target install  -j $(nproc)
     fi
 
     if [ ! -d ${NEO_INSTALL_DIR} ]; then
       rm  -f neo/build/CMakeCache.txt
-      cmake -G "${BUILD_TOOL}" -S neo -B neo/build -DCMAKE_INSTALL_PREFIX=${NEO_INSTALL_DIR} -DIGC_DIR=${IGC_INSTALL_DIR} -DGMM_DIR=${GMMLIB_INSTALL_DIR} -DCMAKE_PREFIX_PATH=${IGSC_INSTALL_DIR} -DSKIP_UNIT_TESTS=ON -DOCL_ICD_VENDORDIR=${NEO_INSTALL_DIR}/etc/OpenCL/vendors -DLevelZero_INCLUDE_DIR=${LEVEL_ZERO_INSTALL_DIR}/include
+      CC=gcc CXX=g++ cmake -G "${BUILD_TOOL}" -S neo -B neo/build -DCMAKE_INSTALL_PREFIX=${NEO_INSTALL_DIR} -DIGC_DIR=${IGC_INSTALL_DIR} -DGMM_DIR=${GMMLIB_INSTALL_DIR} -DCMAKE_PREFIX_PATH=${IGSC_INSTALL_DIR} -DSKIP_UNIT_TESTS=ON -DOCL_ICD_VENDORDIR=${NEO_INSTALL_DIR}/etc/OpenCL/vendors -DLevelZero_INCLUDE_DIR=${LEVEL_ZERO_INSTALL_DIR}/include
       cmake --build neo/build --config Release -j $(nproc)
       cmake --build neo/build --target install -j $(nproc)
     fi
@@ -236,7 +215,7 @@ if [ $MODULEFILES ]; then
   yes | ./scripts/gen_modulefile.py --modulefiles $MODULEFILES_DIR ${GMMLIB_INSTALL_DIR}
   yes | ./scripts/gen_modulefile.py --modulefiles $MODULEFILES_DIR ${IGSC_INSTALL_DIR}
   yes | ./scripts/gen_modulefile.py --modulefiles $MODULEFILES_DIR ${IGC_INSTALL_DIR}
-  yes | ./scripts/gen_modulefile.py --modulefiles $MODULEFILES_DIR ${NEO_INSTALL_DIR} -e OCL_ICD_VENDORS=\${install_dir}/etc/OpenCL/vendors
+  yes | ./scripts/gen_modulefile.py --modulefiles $MODULEFILES_DIR ${NEO_INSTALL_DIR} -e OCL_ICD_VENDORS=\${install_dir}/etc/OpenCL/vendors -e OCL_ICD_FILENAMES=\${install_dir}/etc/OpenCL/vendors/intel.icd
   yes | ./scripts/gen_modulefile.py --modulefiles $MODULEFILES_DIR ${LEVEL_ZERO_INSTALL_DIR}
 fi
   
