@@ -126,7 +126,8 @@ checkout_tags() {
 
 LLVM_VERSION=$(clang-14 --version | grep -o 'version [0-9]*\.[0-9]*\.[0-9]*' | awk '{print $2}')
 
-IGC_OPTS="-DIGC_OPTION__ARCHITECTURE_TARGET=Linux64 -DIGC_OPTION__LLVM_MODE=Prebuilds -DLLVM_ROOT=$(dirname $(dirname $(which clang++))) -DIGC_OPTION__SPIRV_TOOLS_MODE=Prebuilds -DIGC_OPTION__LLVM_PREFERRED_VERSION=${LLVM_VERSION}"
+IGC_OPTS="-DCCLANG_BUILD_PREBUILDS=ON -DCCLANG_BUILD_PREBUILDS_DIR=$(dirname $(dirname $(which clang++))) -DIGC_OPTION__ARCHITECTURE_TARGET=Linux64 -DIGC_OPTION__LLVM_MODE=Prebuilds -DLLVM_ROOT=$(dirname $(dirname $(which clang++))) -DIGC_OPTION__SPIRV_TOOLS_MODE=Prebuilds -DIGC_OPTION__LLVM_PREFERRED_VERSION=${LLVM_VERSION}"
+# IGC_OPTS="-DIGC_OPTION__ARCHITECTURE_TARGET=Linux64 -DIGC_OPTION__LLVM_MODE=Prebuilds -DLLVM_ROOT=$(dirname $(dirname $(which clang++))) -DIGC_OPTION__SPIRV_TOOLS_MODE=Prebuilds -DIGC_OPTION__LLVM_PREFERRED_VERSION=${LLVM_VERSION}"
 
 if [ $DOWNLOAD ]; then
     echo "Downloading all dependencies"
@@ -146,7 +147,7 @@ fi
 
 # Can't just configure in one step and then build because configuration requires built dependencies
 if [ $BUILD ]; then
-    checkout_tags
+    # checkout_tags
     source cache.txt
 
     echo "Building all dependencies"
