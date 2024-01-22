@@ -194,7 +194,7 @@ if [ $BUILD ]; then
 
     if [ ! -d ${NEO_INSTALL_DIR} ]; then
       rm  -f neo/build/CMakeCache.txt
-      CC=gcc CXX=g++ cmake -G "${BUILD_TOOL}" -S neo -B neo/build -DCMAKE_INSTALL_PREFIX=${NEO_INSTALL_DIR} -DIGC_DIR=${IGC_INSTALL_DIR} -DGMM_DIR=${GMMLIB_INSTALL_DIR} -DCMAKE_PREFIX_PATH=${IGSC_INSTALL_DIR} -DSKIP_UNIT_TESTS=ON -DOCL_ICD_VENDORDIR=${NEO_INSTALL_DIR}/etc/OpenCL/vendors -DLevelZero_INCLUDE_DIR=${LEVEL_ZERO_INSTALL_DIR}/include
+      CC=gcc CXX=g++ cmake -G "${BUILD_TOOL}" -S neo -B neo/build -DCMAKE_INSTALL_PREFIX=${NEO_INSTALL_DIR} -DIGC_DIR=${IGC_INSTALL_DIR} -DGMM_DIR=${GMMLIB_INSTALL_DIR} -DCMAKE_PREFIX_PATH=${IGSC_INSTALL_DIR} -DSKIP_UNIT_TESTS=ON -DOCL_ICD_VENDORDIR=${NEO_INSTALL_DIR}/etc/OpenCL/vendors -DLevelZero_INCLUDE_DIR=${LEVEL_ZERO_INSTALL_DIR}/include -DNEO_ENABLE_i915_PRELIM_DETECTION=ON
       cmake --build neo/build --config Release -j $(nproc)
       cmake --build neo/build --target install -j $(nproc)
     fi
