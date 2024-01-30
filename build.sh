@@ -147,7 +147,7 @@ fi
 
 # Can't just configure in one step and then build because configuration requires built dependencies
 if [ $BUILD ]; then
-    # checkout_tags
+    checkout_tags
     source cache.txt
 
     echo "Building all dependencies"
@@ -216,7 +216,7 @@ if [ $MODULEFILES ]; then
   yes | ./scripts/gen_modulefile.py --modulefiles $MODULEFILES_DIR ${GMMLIB_INSTALL_DIR}
   yes | ./scripts/gen_modulefile.py --modulefiles $MODULEFILES_DIR ${IGSC_INSTALL_DIR}
   yes | ./scripts/gen_modulefile.py --modulefiles $MODULEFILES_DIR ${IGC_INSTALL_DIR}
-  yes | ./scripts/gen_modulefile.py --modulefiles $MODULEFILES_DIR ${NEO_INSTALL_DIR} -e OCL_ICD_VENDORS=\${install_dir}/etc/OpenCL/vendors -e OCL_ICD_FILENAMES=\${install_dir}/etc/OpenCL/vendors/intel.icd
+  yes | ./scripts/gen_modulefile.py --modulefiles $MODULEFILES_DIR ${NEO_INSTALL_DIR} -e OCL_ICD_VENDORS=\${install_dir}/etc/OpenCL/vendors -e OCL_ICD_FILENAMES=\${install_dir}/etc/OpenCL/vendors/intel.icd --prereq intel-compute-runtime/igc
   yes | ./scripts/gen_modulefile.py --modulefiles $MODULEFILES_DIR ${LEVEL_ZERO_INSTALL_DIR}
 fi
   
