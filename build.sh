@@ -124,10 +124,14 @@ checkout_tags() {
   echo "OCL_ICD_INSTALL_DIR=${OCL_ICD_INSTALL_DIR}" | tee -a cache.txt
 }
 
-LLVM_VERSION=$(clang-14 --version | grep -o 'version [0-9]*\.[0-9]*\.[0-9]*' | awk '{print $2}')
+#LLVM_VERSION=$(clang-14 --version | grep -o 'version [0-9]*\.[0-9]*\.[0-9]*' | awk '{print $2}')
 
-IGC_OPTS="-DCCLANG_BUILD_PREBUILDS=ON -DCCLANG_BUILD_PREBUILDS_DIR=$(dirname $(dirname $(which clang++))) -DIGC_OPTION__ARCHITECTURE_TARGET=Linux64 -DIGC_OPTION__LLVM_MODE=Prebuilds -DLLVM_ROOT=$(dirname $(dirname $(which clang++))) -DIGC_OPTION__SPIRV_TOOLS_MODE=Prebuilds -DIGC_OPTION__LLVM_PREFERRED_VERSION=${LLVM_VERSION}"
+#""
+#IGC_OPTS="-DCCLANG_BUILD_PREBUILDS=ON -DCCLANG_BUILD_PREBUILDS_DIR=$(dirname $(dirname $(which clang++))) -DIGC_OPTION__ARCHITECTURE_TARGET=Linux64 -DIGC_OPTION__LLVM_MODE=Prebuilds -DLLVM_ROOT=$(dirname $(dirname $(which clang++))) -DIGC_OPTION__SPIRV_TOOLS_MODE=Prebuilds -DIGC_OPTION__LLVM_PREFERRED_VERSION=${LLVM_VERSION}"
 # IGC_OPTS="-DIGC_OPTION__ARCHITECTURE_TARGET=Linux64 -DIGC_OPTION__LLVM_MODE=Prebuilds -DLLVM_ROOT=$(dirname $(dirname $(which clang++))) -DIGC_OPTION__SPIRV_TOOLS_MODE=Prebuilds -DIGC_OPTION__LLVM_PREFERRED_VERSION=${LLVM_VERSION}"
+# IGC_OPTS="-DIGC_OPTION__ARCHITECTURE_TARGET=Linux64 -DIGC_OPTION__LLVM_MODE=Prebuilds -DLLVM_ROOT=$(dirname $(dirname $(which clang++))) -DIGC_OPTION__SPIRV_TOOLS_MODE=Prebuilds -DIGC_OPTION__LLVM_PREFERRED_VERSION=${LLVM_VERSION}"
+#-DLLVM_TARGETS_TO_BUILD=;-DLLVM_INCLUDE_TOOLS=ON;-DLLVM_BUILD_TOOLS=OFF;-DLLVM_INCLUDE_UTILS=ON;-DLLVM_BUILD_UTILS=OFF;-DLLVM_INCLUDE_BENCHMARKS=OFF;-DLLVM_INCLUDE_EXAMPLES=OFF;-DLLVM_INCLUDE_TESTS=OFF;-DLLVM_APPEND_VC_REV=OFF;-DLLVM_ENABLE_THREADS=ON;-DLLVM_ENABLE_PIC=ON;-DLLVM_ABI_BREAKING_CHECKS=FORCE_OFF;-DLLVM_ENABLE_DUMP=ON;-DLLVM_ENABLE_TERMINFO=OFF;-DLLVM_ENABLE_EH=ON;-DLLVM_ENABLE_RTTI=ON;-DLLVM_ENABLE_EH=ON;-DLLVM_ENABLE_RTTI=ON;-DLLVM_BUILD_32_BITS=OFF;-DLLVM_EXTERNAL_PROJECTS=clang;lld;-DLLVM_EXTERNAL_CLANG_SOURCE_DIR=/space/pvelesko/intel-compute-runtime-build/igc/build/IGC/llvm-deps/src/clang;-DLLVM_EXTERNAL_LLD_SOURCE_DIR=/space/pvelesko/intel-compute-runtime-build/igc/build/IGC/llvm-deps/src/lld
+IGC_OPTS="-DLLVM_TARGETS_TO_BUILD=X86"
 
 if [ $DOWNLOAD ]; then
     echo "Downloading all dependencies"
@@ -135,8 +139,15 @@ if [ $DOWNLOAD ]; then
     git clone https://github.com/intel/metee.git
     git clone https://github.com/intel/gmmlib.git
     git clone https://github.com/intel/igsc.git
-    git clone https://github.com/intel/vc-intrinsics vc-intrinsics
+
     git clone https://github.com/intel/intel-graphics-compiler.git igc
+    git clone https://github.com/intel/vc-intrinsics vc-intrinsics
+    git clone -b llvmorg-14.0.5 https://github.com/llvm/llvm-project llvm-project
+    git clone -b ocl-open-140 https://github.com/intel/opencl-clang llvm-project/llvm/projects/opencl-clang
+    git clone -b llvm_release_140 https://github.com/KhronosGroup/SPIRV-LLVM-Translator llvm-project/llvm/projects/llvm-spirv
+    git clone https://github.com/KhronosGroup/SPIRV-Tools.git SPIRV-Tools
+    git clone https://github.com/KhronosGroup/SPIRV-Headers.git SPIRV-Headers
+
     git clone https://github.com/intel/compute-runtime.git neo
     git clone https://github.com/oneapi-src/level-zero.git
 fi
