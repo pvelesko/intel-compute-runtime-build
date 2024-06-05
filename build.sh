@@ -8,8 +8,13 @@
 set -e
 
 
-BUILD_TOOL="Ninja"
-#BUILD_TOOL="Unix Makefiles"
+# check if ninja exists and if so set BUILD_TOOL 
+if command -v ninja &> /dev/null
+then
+  BUILD_TOOL="Ninja"
+else
+  BUILD_TOOL="Unix Makefiles"
+fi
 
 if [ $# -eq 0 ]; then
   echo "Usage: build.sh [options]"
@@ -114,8 +119,17 @@ checkout_tags() {
   LEVEL_ZERO_INSTALL_DIR=${INSTALL_DIR}/level-zero/${NEO_TAG}
   OCL_ICD_INSTALL_DIR=${INSTALL_DIR}/opencl
 
+  # strip trailing /
+  METEE_INSTALL_DIR=$(echo $METEE_INSTALL_DIR | sed 's:/*$::')
+  GMMLIB_INSTALL_DIR=$(echo $GMMLIB_INSTALL_DIR | sed 's:/*$::')
+  IGSC_INSTALL_DIR=$(echo $IGSC_INSTALL_DIR | sed 's:/*$::')
+  IGC_INSTALL_DIR=$(echo $IGC_INSTALL_DIR | sed 's:/*$::')
+  NEO_INSTALL_DIR=$(echo $NEO_INSTALL_DIR | sed 's:/*$::')
+  LEVEL_ZERO_INSTALL_DIR=$(echo $LEVEL_ZERO_INSTALL_DIR | sed 's:/*$::')
+  OCL_ICD_INSTALL_DIR=$(echo $OCL_ICD_INSTALL_DIR | sed 's:/*$::')
+
   #dump install dir vars to cache.txt
-  echo "METEE_INSTALL_DIR=${METEE_INSTALL_DIR}" | tee cache.txt
+  echo "METEE_INSTALL_DIR=${METEE_INSTALL_DIR}" | tee -a cache.txt
   echo "GMMLIB_INSTALL_DIR=${GMMLIB_INSTALL_DIR}" | tee -a cache.txt
   echo "IGSC_INSTALL_DIR=${IGSC_INSTALL_DIR}" | tee -a cache.txt
   echo "IGC_INSTALL_DIR=${IGC_INSTALL_DIR}" | tee -a cache.txt
@@ -124,17 +138,25 @@ checkout_tags() {
   echo "OCL_ICD_INSTALL_DIR=${OCL_ICD_INSTALL_DIR}" | tee -a cache.txt
 }
 
-LLVM_VERSION=$(clang-14 --version | grep -o 'version [0-9]*\.[0-9]*\.[0-9]*' | awk '{print $2}')
-
-#""
-#IGC_OPTS="-DCCLANG_BUILD_PREBUILDS=ON -DCCLANG_BUILD_PREBUILDS_DIR=$(dirname $(dirname $(which clang++))) -DIGC_OPTION__ARCHITECTURE_TARGET=Linux64 -DIGC_OPTION__LLVM_MODE=Prebuilds -DLLVM_ROOT=$(dirname $(dirname $(which clang++))) -DIGC_OPTION__SPIRV_TOOLS_MODE=Prebuilds -DIGC_OPTION__LLVM_PREFERRED_VERSION=${LLVM_VERSION}"
-# IGC_OPTS="-DIGC_OPTION__ARCHITECTURE_TARGET=Linux64 -DIGC_OPTION__LLVM_MODE=Prebuilds -DLLVM_ROOT=$(dirname $(dirname $(which clang++))) -DIGC_OPTION__SPIRV_TOOLS_MODE=Prebuilds -DIGC_OPTION__LLVM_PREFERRED_VERSION=${LLVM_VERSION}"
-IGC_OPTS="-DIGC_OPTION__ARCHITECTURE_TARGET=Linux64 -DIGC_OPTION__LLVM_MODE=Prebuilds -DLLVM_ROOT=$(dirname $(dirname $(which clang++))) -DIGC_OPTION__SPIRV_TOOLS_MODE=Prebuilds -DIGC_OPTION__LLVM_PREFERRED_VERSION=${LLVM_VERSION}"
-#-DLLVM_TARGETS_TO_BUILD=;-DLLVM_INCLUDE_TOOLS=ON;-DLLVM_BUILD_TOOLS=OFF;-DLLVM_INCLUDE_UTILS=ON;-DLLVM_BUILD_UTILS=OFF;-DLLVM_INCLUDE_BENCHMARKS=OFF;-DLLVM_INCLUDE_EXAMPLES=OFF;-DLLVM_INCLUDE_TESTS=OFF;-DLLVM_APPEND_VC_REV=OFF;-DLLVM_ENABLE_THREADS=ON;-DLLVM_ENABLE_PIC=ON;-DLLVM_ABI_BREAKING_CHECKS=FORCE_OFF;-DLLVM_ENABLE_DUMP=ON;-DLLVM_ENABLE_TERMINFO=OFF;-DLLVM_ENABLE_EH=ON;-DLLVM_ENABLE_RTTI=ON;-DLLVM_ENABLE_EH=ON;-DLLVM_ENABLE_RTTI=ON;-DLLVM_BUILD_32_BITS=OFF;-DLLVM_EXTERNAL_PROJECTS=clang;lld;-DLLVM_EXTERNAL_CLANG_SOURCE_DIR=/space/pvelesko/intel-compute-runtime-build/igc/build/IGC/llvm-deps/src/clang;-DLLVM_EXTERNAL_LLD_SOURCE_DIR=/space/pvelesko/intel-compute-runtime-build/igc/build/IGC/llvm-deps/src/lld
-#IGC_OPTS="-DLLVM_TARGETS_TO_BUILD=X86"
-
 if [ $DOWNLOAD ]; then
+    rm -f cache.txt
+    # ask the user if clang-14 with opencl-clang is installed or if it should be built
+    echo "Do you have clang-14 with opencl-clang installed? (y/n)"
+    read CLANG_INSTALLED
+    if [ $CLANG_INSTALLED == "y" ]; then
+      LLVM_VERSION=$(clang-14 --version | grep -o 'version [0-9]*\.[0-9]*\.[0-9]*' | awk '{print $2}')
+      echo "LLVM_VERSION=${LLVM_VERSION}" | tee -a cache.txt
+      IGC_OPTS="\"-DIGC_OPTION__ARCHITECTURE_TARGET=Linux64 -DIGC_OPTION__LLVM_MODE=Prebuilds -DLLVM_ROOT=$(dirname $(dirname $(which clang++))) -DIGC_OPTION__SPIRV_TOOLS_MODE=Prebuilds -DIGC_OPTION__LLVM_PREFERRED_VERSION=${LLVM_VERSION}\""
+      #IGC_OPTS="-DCCLANG_BUILD_PREBUILDS=ON -DCCLANG_BUILD_PREBUILDS_DIR=$(dirname $(dirname $(which clang++))) -DIGC_OPTION__ARCHITECTURE_TARGET=Linux64 -DIGC_OPTION__LLVM_MODE=Prebuilds -DLLVM_ROOT=$(dirname $(dirname $(which clang++))) -DIGC_OPTION__SPIRV_TOOLS_MODE=Prebuilds -DIGC_OPTION__LLVM_PREFERRED_VERSION=${LLVM_VERSION}"
+      #IGC_OPTS="-DIGC_OPTION__ARCHITECTURE_TARGET=Linux64 -DIGC_OPTION__LLVM_MODE=Prebuilds -DLLVM_ROOT=$(dirname $(dirname $(which clang++))) -DIGC_OPTION__SPIRV_TOOLS_MODE=Prebuilds -DIGC_OPTION__LLVM_PREFERRED_VERSION=${LLVM_VERSION}
+    else
+      IGC_OPTS="-DLLVM_TARGETS_TO_BUILD=X86 -DIGC_OPTION__LLVM_MODE=Source -DIGC_OPTION__SPIRV_TOOLS_MODE=Source"
+    fi
+    echo "IGC_OPTS=${IGC_OPTS}" | tee -a cache.txt
+
+
     echo "Downloading all dependencies"
+    set +e
 
     git clone https://github.com/intel/metee.git
     git clone https://github.com/intel/gmmlib.git
@@ -142,18 +164,24 @@ if [ $DOWNLOAD ]; then
 
     git clone https://github.com/intel/intel-graphics-compiler.git igc
     git clone https://github.com/intel/vc-intrinsics vc-intrinsics
-    git clone -b llvmorg-14.0.5 https://github.com/llvm/llvm-project llvm-project
-    git clone -b ocl-open-140 https://github.com/intel/opencl-clang llvm-project/llvm/projects/opencl-clang
-    git clone -b llvm_release_140 https://github.com/KhronosGroup/SPIRV-LLVM-Translator llvm-project/llvm/projects/llvm-spirv
-    git clone https://github.com/KhronosGroup/SPIRV-Tools.git SPIRV-Tools
-    git clone https://github.com/KhronosGroup/SPIRV-Headers.git SPIRV-Headers
 
+    if [ $CLANG_INSTALLED == "n" ]; then
+      git clone -b llvmorg-14.0.5 https://github.com/llvm/llvm-project llvm-project
+      git clone -b ocl-open-140 https://github.com/intel/opencl-clang llvm-project/llvm/projects/opencl-clang
+      git clone -b llvm_release_140 https://github.com/KhronosGroup/SPIRV-LLVM-Translator  --depth 1 llvm-project/llvm/projects/llvm-spirv
+      git clone https://github.com/KhronosGroup/SPIRV-Tools.git SPIRV-Tools
+    fi
+
+    git clone https://github.com/KhronosGroup/SPIRV-Headers.git SPIRV-Headers
     git clone https://github.com/intel/compute-runtime.git neo
     git clone https://github.com/oneapi-src/level-zero.git
+    set -e
 fi
 
 if [ $CLEAN ]; then
-    echo "clean - TODO"
+  # delete all git cloned repos
+  echo "Cleaning all dependencies"
+  rm -rf metee gmmlib igsc igc vc-intrinsics llvm-project SPIRV-Headers SPIRV-Tools neo level-zero cache.txt
 fi
 
 # Can't just configure in one step and then build because configuration requires built dependencies
@@ -161,7 +189,7 @@ if [ $BUILD ]; then
     checkout_tags
     source cache.txt
 
-    CMAKE_PREFIX="-DCMAKE_PREFIX_PATH=${IGSC_INSTALL_DIR}:${IGC_INSTALL_DIR}:${GMMLIB_INSTALL_DIR}:${LEVEL_ZERO_INSTALL_DIR}:${METEE_INSTALL_DIR}"
+    #CMAKE_PREFIX="-DCMAKE_PREFIX_PATH=${METEE_INSTALL_DIR}:${IGC_INSTALL_DIR}"
 
     echo "Building all dependencies"
     echo "Setting CC=gcc CXX=g++"
@@ -209,7 +237,8 @@ if [ $BUILD ]; then
     
     if [ ! -d ${NEO_INSTALL_DIR} ]; then
       rm  -f neo/build/CMakeCache.txt
-      CC=gcc CXX=g++ cmake -G "${BUILD_TOOL}" -S neo -B neo/build -DGMM_DIR=${GMMLIB_INSTALL_DIR} -DCMAKE_INSTALL_PREFIX=${NEO_INSTALL_DIR} $CMAKE_PREFIX -DSKIP_UNIT_TESTS=ON -DOCL_ICD_VENDORDIR=${NEO_INSTALL_DIR}/etc/OpenCL/vendors -DNEO_ENABLE_i915_PRELIM_DETECTION=ON
+      CC=gcc CXX=g++ cmake -G "${BUILD_TOOL}" -S neo -B neo/build -DCMAKE_INSTALL_PREFIX=${NEO_INSTALL_DIR} -DIGC_DIR=${IGC_INSTALL_DIR} -DGMM_DIR=${GMMLIB_INSTALL_DIR} -DCMAKE_PREFIX_PATH=${IGSC_INSTALL_DIR} -DSKIP_UNIT_TESTS=ON -DOCL_ICD_VENDORDIR=${NEO_INSTALL_DIR}/etc/OpenCL/vendors -DLevelZero_INCLUDE_DIR=${LEVEL_ZERO_INSTALL_DIR}/include -DNEO_ENABLE_i915_PRELIM_DETECTION=ON
+#      CC=gcc CXX=g++ cmake -G "${BUILD_TOOL}" -S neo -B neo/build -DGMM_DIR=${GMMLIB_INSTALL_DIR} -DCMAKE_INSTALL_PREFIX=${NEO_INSTALL_DIR} $CMAKE_PREFIX -DSKIP_UNIT_TESTS=ON -DOCL_ICD_VENDORDIR=${NEO_INSTALL_DIR}/etc/OpenCL/vendors -DNEO_ENABLE_i915_PRELIM_DETECTION=ON
       cmake --build neo/build --config Release -j $(nproc)
       cmake --build neo/build --target install -j $(nproc)
     fi
