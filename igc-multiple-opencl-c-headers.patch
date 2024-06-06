@@ -1,0 +1,15 @@
+diff --git a/IGC/BiFModule/CMakeLists.txt b/IGC/BiFModule/CMakeLists.txt
+index 445818747..1fb6b50fe 100644
+--- a/IGC/BiFModule/CMakeLists.txt
++++ b/IGC/BiFModule/CMakeLists.txt
+@@ -45,6 +45,10 @@ if(UNIX)
+     install(FILES $<TARGET_SONAME_FILE:opencl-clang-lib> DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR} COMPONENT igc-opencl)
+ 
+     # Get header opencl-c.h directory
++    list(LENGTH opencl-header len)
++    if(len GREATER 1)
++	      list(GET opencl-header 0 opencl-header)
++      endif()
+     get_filename_component(opencl-headers-dir ${opencl-header} DIRECTORY)
+ 
+     set(opencl-headers "${opencl-header}")

@@ -146,9 +146,7 @@ if [ $DOWNLOAD ]; then
     if [ $CLANG_INSTALLED == "y" ]; then
       LLVM_VERSION=$(clang-14 --version | grep -o 'version [0-9]*\.[0-9]*\.[0-9]*' | awk '{print $2}')
       echo "LLVM_VERSION=${LLVM_VERSION}" | tee -a cache.txt
-      IGC_OPTS="\"-DIGC_OPTION__ARCHITECTURE_TARGET=Linux64 -DIGC_OPTION__LLVM_MODE=Prebuilds -DLLVM_ROOT=$(dirname $(dirname $(which clang++))) -DIGC_OPTION__SPIRV_TOOLS_MODE=Prebuilds -DIGC_OPTION__LLVM_PREFERRED_VERSION=${LLVM_VERSION}\""
-      #IGC_OPTS="-DCCLANG_BUILD_PREBUILDS=ON -DCCLANG_BUILD_PREBUILDS_DIR=$(dirname $(dirname $(which clang++))) -DIGC_OPTION__ARCHITECTURE_TARGET=Linux64 -DIGC_OPTION__LLVM_MODE=Prebuilds -DLLVM_ROOT=$(dirname $(dirname $(which clang++))) -DIGC_OPTION__SPIRV_TOOLS_MODE=Prebuilds -DIGC_OPTION__LLVM_PREFERRED_VERSION=${LLVM_VERSION}"
-      #IGC_OPTS="-DIGC_OPTION__ARCHITECTURE_TARGET=Linux64 -DIGC_OPTION__LLVM_MODE=Prebuilds -DLLVM_ROOT=$(dirname $(dirname $(which clang++))) -DIGC_OPTION__SPIRV_TOOLS_MODE=Prebuilds -DIGC_OPTION__LLVM_PREFERRED_VERSION=${LLVM_VERSION}
+      IGC_OPTS="\"-DIGC_OPTION__ARCHITECTURE_TARGET=Linux64 -DIGC_OPTION__LLVM_MODE=Prebuilds -DLLVM_ROOT=$(dirname $(dirname $(which clang++))) -DIGC_OPTION__SPIRV_TOOLS_MODE=Prebuilds -DIGC_OPTION__LLVM_PREFERRED_VERSION=${LLVM_VERSION} -DCCLANG_BUILD_PREBUILDS_DIR=$(dirname $(dirname $(which clang++)))"\"
     else
       IGC_OPTS="-DLLVM_TARGETS_TO_BUILD=X86 -DIGC_OPTION__LLVM_MODE=Source -DIGC_OPTION__SPIRV_TOOLS_MODE=Source"
     fi
@@ -194,6 +192,17 @@ if [ $BUILD ]; then
     echo "Building all dependencies"
     echo "Setting CC=gcc CXX=g++"
 
+    echo "Applying isgc include patch"
+    cd igsc
+    git apply ../igsc_include.patch
+    cd ../
+
+    echo "Applying igc multiple opencl-c.h header patch"
+    cd igc
+    git apply ../igc-multiple-opencl-c-headers.patch
+    cd ../
+
+
     pip install mako
     # sudo apt install libllvmspirvlib-14-dev llvm-spirv-14 llvm-14 llvm-14-dev clang-14 liblld-14 liblld-14-dev
 
@@ -237,8 +246,7 @@ if [ $BUILD ]; then
     
     if [ ! -d ${NEO_INSTALL_DIR} ]; then
       rm  -f neo/build/CMakeCache.txt
-      CC=gcc CXX=g++ cmake -G "${BUILD_TOOL}" -S neo -B neo/build -DCMAKE_INSTALL_PREFIX=${NEO_INSTALL_DIR} -DIGC_DIR=${IGC_INSTALL_DIR} -DGMM_DIR=${GMMLIB_INSTALL_DIR} -DCMAKE_PREFIX_PATH=${IGSC_INSTALL_DIR} -DSKIP_UNIT_TESTS=ON -DOCL_ICD_VENDORDIR=${NEO_INSTALL_DIR}/etc/OpenCL/vendors -DLevelZero_INCLUDE_DIR=${LEVEL_ZERO_INSTALL_DIR}/include -DNEO_ENABLE_i915_PRELIM_DETECTION=ON
-#      CC=gcc CXX=g++ cmake -G "${BUILD_TOOL}" -S neo -B neo/build -DGMM_DIR=${GMMLIB_INSTALL_DIR} -DCMAKE_INSTALL_PREFIX=${NEO_INSTALL_DIR} $CMAKE_PREFIX -DSKIP_UNIT_TESTS=ON -DOCL_ICD_VENDORDIR=${NEO_INSTALL_DIR}/etc/OpenCL/vendors -DNEO_ENABLE_i915_PRELIM_DETECTION=ON
+      CC=gcc CXX=g++ cmake -G "${BUILD_TOOL}" -S neo -B neo/build -DCMAKE_INSTALL_PREFIX=${NEO_INSTALL_DIR} -DIGC_DIR=${IGC_INSTALL_DIR} -DGMM_DIR=${GMMLIB_INSTALL_DIR} -DCMAKE_PREFIX_PATH=${IGSC_INSTALL_DIR} -DSKIP_UNIT_TESTS=ON -DOCL_ICD_VENDORDIR=${NEO_INSTALL_DIR}/etc/OpenCL/vendors -DLevelZero_INCLUDE_DIR=${LEVEL_ZERO_INSTALL_DIR}/include -DNEO_ENABLE_i915_PRELIM_DETECTION=ON -DSUPPORT_XE_HP_CORE=ON -DSUPPORT_XE_HP_SDV=ON -DSUPPORT_PVC=ON -DNEO_SKIP_UNIT_TESTS=OFF -DNEO_DISABLE_MITIGATIONS=ON -DCMAKE_PREFIX_PATH=${IGSC_INSTALL_DIR}/lib/cmake/igsc
       cmake --build neo/build --config Release -j $(nproc)
       cmake --build neo/build --target install -j $(nproc)
     fi
