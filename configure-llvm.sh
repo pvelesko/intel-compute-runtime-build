@@ -4,23 +4,15 @@
 set -e
 
 # check arguments
-if [ $# -ne 2 ]; then
+if [ $# -ne 1 ]; then
   echo "This script will download and build LLVM ${VERSION} and install it to <install_dir>."
   echo "This LLVM can be used to build the Intel Compute Runtime. Projects clang and lld enabled."
-  echo "Usage: $0 <version> <install_dir> <link_type>"
-  echo "version: LLVM version 14, 15, 16, 17, etc"
-  echo "link_type: STATIC (dynamic linking not supported in NEO)"
+  echo "Usage: <install_dir>"
   exit 1
 fi
 
-# check version argument to make sure it's a number
-if ! [[ "$1" =~ ^[0-9]+$ ]]; then
-  echo "Invalid version : $1 Must be a number."
-  exit 1
-fi
-
-VERSION=$1
-INSTALL_DIR=$2
+VERSION=14
+INSTALL_DIR=$1
 
 LLVM_BRANCH="release/${VERSION}.x"
 TRANSLATOR_BRANCH="llvm_release_${VERSION}0"
